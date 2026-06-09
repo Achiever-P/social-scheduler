@@ -6,6 +6,7 @@ import {
   LogOutIcon,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
 interface SidebarProps {
   isopen: boolean;
@@ -15,14 +16,7 @@ interface SidebarProps {
 const Sidebar = ({ isopen, setIsOpen }: SidebarProps) => {
   const location = useLocation();
 
-  const logout = () => {
-    window.location.href = "/";
-  };
-
-  const user = {
-    name: "John Doe",
-    email: "johndoe@example.com",
-  };
+  const {logout, user} = useAuth()
 
   const navItems = [
     {
