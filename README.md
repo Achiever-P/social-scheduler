@@ -1,5 +1,9 @@
 # AI-Powered Social Media Scheduler
-<small>An advanced, full-stack application designed to help users compose, generate, and schedule social media posts across multiple platforms. Leveraging Google Gemini for content generation, Leonardo.ai for image generation, Cloudinary for persistent media hosting, and Zernio for multi-platform social media integration (Twitter, LinkedIn, Facebook, Instagram).</small>
+
+An advanced, full-stack application designed to help users compose, generate, and schedule social media posts across multiple platforms. Leveraging Google Gemini for content generation, Leonardo.ai for image generation, Cloudinary for persistent media hosting, and Zernio for multi-platform social media integration (Twitter, LinkedIn, Facebook, Instagram).
+
+<img width="1918" height="904" alt="Screenshot 2026-06-11 160437" src="https://github.com/user-attachments/assets/62d5e918-be8c-457c-bca0-6d946313a583" />
+
 ---
 ## 🚀 Key Features
 * **AI Post Composer:** Write compelling post copy instantly using built-in Google Gemini AI.
