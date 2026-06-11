@@ -3,7 +3,6 @@ import { Post } from "../models/Post.js";
 import { Account } from "../models/Account.js";
 import zernio from "../config/zernio.js";
 import { ActivityLog } from "../models/ActivityLog.js";
-import { platform } from "node:process";
 
 export const initScheduler = () => {
   cron.schedule("* * * * *", async () => {

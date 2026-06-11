@@ -1,8 +1,8 @@
 import express from "express";
-import { protect } from "../middlewares/authMiddlewware.js";
+import { protect } from "../middlewares/authMiddleware.js";
 import { getActivity } from "../controllers/activityController.js";
 
-const activityRouter = express. Router();
+const activityRouter = express.Router();
 
 activityRouter.get('/', protect, getActivity)
 
