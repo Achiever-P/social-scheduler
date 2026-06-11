@@ -104,19 +104,19 @@ const Accounts = () => {
   const connectedIds = accounts.map((a) => a.platform);
 
   return (
-    <div className="space-y-8 max-w-4xl">
+    <div className="space-y-8 max-w-4xl transition-colors duration-200">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-sm">
         <div>
-          <h2 className="text-xl text-slate-900">Connected Accounts</h2>
-          <p className="text-slate-500 text-sm mt-0.5">
+          <h2 className="text-xl text-slate-900 dark:text-zinc-100 font-semibold">Connected Accounts</h2>
+          <p className="text-slate-500 dark:text-zinc-400 text-sm mt-0.5">
             {accounts.length} of {PLATFORMS.length} platforms connected
           </p>
         </div>
 
         <button
           onClick={() => setShowPlatformPicker(true)}
-          className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all w-full sm:w-auto justify-center"
+          className="flex items-center gap-2 px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white rounded-full font-medium transition-all w-full sm:w-auto justify-center cursor-pointer shadow-sm active:scale-98"
         >
           <PlusIcon className="size-4" />
           Connect Account

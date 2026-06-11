@@ -1,9 +1,21 @@
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Urbanist:ital,wght@0,100..900;1,100..900&display=swap");
 @import "tailwindcss";
 
+@variant dark (&:where(.dark, .dark *));
+
+:root {
+    --bg-color: #fafafa;
+    --text-color: #111111;
+}
+
+.dark {
+    --bg-color: #09090b;
+    --text-color: #f4f4f5;
+}
+
 @theme {
-    --color-bg: #fafafa;
-    --color-text: #111111;
+    --color-bg: var(--bg-color);
+    --color-text: var(--text-color);
     --font-sans: "Outfit", sans-serif;
     --font-serif: "Urbanist", sans-serif;
 }

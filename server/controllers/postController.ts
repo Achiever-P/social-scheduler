@@ -1,10 +1,12 @@
 import { Response } from "express";
-import { AuthRequest } from "../middlewares/authMiddlewware.js";
+import { AuthRequest } from "../middlewares/authMiddleware.js";
 import { GoogleGenAI } from "@google/genai";
 import axios from "axios";
 import { cloudinary } from "../config/cloudinary.js";
 import { Generation } from "../models/Generation.js";
 import { Post } from "../models/Post.js";
+import path from "path";
+import fs from "fs";
 
 // Helper to poll Leonardo.ai
 const pollLeonardoJob = async (
@@ -137,12 +139,17 @@ The "imagePrompt" should be a highly descriptive prompt for an image generator t
             leonardoKey
           );
 
-          // Upload to Cloudinary for persistence
-          const uploadResult = await cloudinary.uploader.upload(tempUrl, {
-            folder: "ai-generations",
-          });
+          try {
+            // Upload to Cloudinary for persistence
+            const uploadResult = await cloudinary.uploader.upload(tempUrl, {
+              folder: "ai-generations",
+            });
 
-          mediaUrl = uploadResult.secure_url;
+            mediaUrl = uploadResult.secure_url;
+          } catch (uploadErr: any) {
+            console.error("Cloudinary upload of generated image failed, falling back to Leonardo URL:", uploadErr?.message || uploadErr);
+            mediaUrl = tempUrl;
+          }
         }
       } catch (err: any) {
         console.error("Image generation failed:", err);
@@ -229,27 +236,49 @@ export const schedulePost = async (
     let mediaType: "image" | "video" | undefined = req.body.mediaType;
 
     if (req.file) {
-      const result = await new Promise<any>((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-          {
-            resource_type: "auto",
-            folder: "social-scheduler",
-          },
-          (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              resolve(result);
+      try {
+        const result = await new Promise<any>((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            {
+              resource_type: "auto",
+              folder: "social-scheduler",
+            },
+            (error, result) => {
+              if (error) {
+                reject(error);
+              } else {
+                resolve(result);
+              }
             }
-          }
-        );
+          );
 
-        stream.end(req.file!.buffer);
-      });
+          stream.end(req.file!.buffer);
+        });
 
-      mediaUrl = result.secure_url;
-      mediaType =
-        result.resource_type === "video" ? "video" : "image";
+        mediaUrl = result.secure_url;
+        mediaType =
+          result.resource_type === "video" ? "video" : "image";
+      } catch (uploadError: any) {
+        console.error("Cloudinary upload failed, using local storage fallback:", uploadError?.message || uploadError);
+        
+        // Save file locally as a fallback
+        const uploadDir = path.join(process.cwd(), "uploads");
+        if (!fs.existsSync(uploadDir)) {
+          fs.mkdirSync(uploadDir, { recursive: true });
+        }
+        
+        const fileExt = path.extname(req.file.originalname) || (req.file.mimetype.startsWith("video/") ? ".mp4" : ".jpg");
+        const filename = `${Date.now()}-${Math.round(Math.random() * 1e9)}${fileExt}`;
+        const filePath = path.join(uploadDir, filename);
+        
+        fs.writeFileSync(filePath, req.file.buffer);
+        
+        // Serve locally
+        const host = req.get("host") || "localhost:3000";
+        const protocol = req.protocol || "http";
+        mediaUrl = `${protocol}://${host}/uploads/${filename}`;
+        mediaType = req.file.mimetype.startsWith("video/") ? "video" : "image";
+      }
     }
 
     const post = await Post.create({
@@ -264,8 +293,41 @@ export const schedulePost = async (
 
     res.status(201).json(post);
   } catch (error: any) {
-    res.status(500).json({
-      message: error?.message || "Server error",
-    });
+    console.error("Error in schedulePost:", error);
+    
+    let message = error?.message || "Server error";
+    if (message.includes("status code - 403") || message.toLowerCase().includes("cloudinary")) {
+      message = "Failed to upload image/video to Cloudinary. Please verify that your CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in the server/.env file are correct and active.";
+    }
+    
+    res.status(500).json({ message });
+  }
+};
+
+// Delete post
+// DELETE /api/posts/:id
+export const deletePost = async (
+  req: AuthRequest,
+  res: Response
+): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const post = await Post.findOne({ _id: id, user: req.user._id });
+
+    if (!post) {
+      res.status(404).json({ message: "Post not found or unauthorized" });
+      return;
+    }
+
+    if (post.status === "published") {
+      res.status(400).json({ message: "Published posts cannot be deleted" });
+      return;
+    }
+
+    await Post.deleteOne({ _id: id });
+
+    res.json({ message: "Post deleted successfully" });
+  } catch (error: any) {
+    res.status(500).json({ message: error?.message || "Server error" });
   }
 }; 
